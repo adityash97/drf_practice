@@ -32,8 +32,32 @@ class MovieSerializer(serializers.Serializer):
 
 class GenreSerializer(serializers.Serializer):
     genre = serializers.CharField()
+    
+    def create(self,validated_data):
+        return Genre.objects.create(**validated_data)
+    
+    def update(self,instance,validated_data):
+        for k,v in validated_data.items():
+            setattr(instance,k,v)
+        instance.save()
+        return instance
+    
 
 class DirectorSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField()
-    created_on = serializers.DateTimeField()
-    updated_on = serializers.DateTimeField()
+    created_on = serializers.DateTimeField(read_only = True)
+    updated_on = serializers.DateTimeField(read_only = True)
+    
+    def create(self,validated_data):
+        return Director.objects.create(**validated_data)
+    
+    def update(self,instance,validated_data):
+        for k,v in validated_data.items():
+            setattr(instance,k,v)
+        instance.save()
+        return instance
+        
+        
+    
+    

@@ -25,7 +25,7 @@ class MovieRatingDetail(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     comment = models.TextField(blank=True,null=True)
     rating = models.IntegerField(validators=[MaxValueValidator(5)],default=0)
-    like = models.BooleanField(default=False)
+    like = models.BooleanField(default=False) # TODO : user might like it(True) or donot like(False) or do nothing (Null)
     created_on = models.DateTimeField(auto_now_add=True, auto_now=False)
     updated_on = models.DateTimeField(auto_now_add=False, auto_now=True)
 

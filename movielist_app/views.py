@@ -46,7 +46,7 @@ class MovieDetailsAPIView(APIView):
     
     def put(self,request,pk):
         movie = self.get_object(pk)
-        serializer = MovieSerializer(movie,data = request.data)
+        serializer = MovieSerializer(movie,data = request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -80,7 +80,7 @@ class GenreDetailAPIView(APIView):
         
     def put(self,request,pk):
         genre = self.get_object(pk)
-        serializer = GenreSerializer(genre,data = request.data)
+        serializer = GenreSerializer(genre,data = request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -123,7 +123,7 @@ class DirectorDetailAPIView(APIView):
         
     def put(self,request,pk):
         director = self.get_object(pk)
-        serializer = DirectorSerializer(director,data = request.data)
+        serializer = DirectorSerializer(director,data = request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

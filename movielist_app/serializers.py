@@ -33,9 +33,7 @@ class MovieSerializer(serializers.Serializer):
 class GenreSerializer(serializers.Serializer):
     genre = serializers.CharField()
     
-    def create(self,validated_data):
-        return Genre.objects.create(**validated_data)
-    
+    # TODO create genre.
     def update(self,instance,validated_data):
         for k,v in validated_data.items():
             setattr(instance,k,v)

@@ -1,16 +1,23 @@
 from django.shortcuts import render
 
 # Create your views here.
+from django.http import Http404
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
 from .models import User,MovieRatingDetail,Token
 from .serializers import UserSerializer
 from .serializers import MovieRatingDetailSerializer
 from .serializers import TokenSerializer
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from movielist_app.serializers import MovieSerializer
+from movielist_app.models import Movie
 
-from django.http import Http404
 
+from .models import User
+
+from utils import remove_none_from_dict
 class UserAPIView(APIView):
     def get(self,request):
         user = User.objects.all()
@@ -83,7 +90,8 @@ class MovieRatingDetailsAPIView(APIView):
     
     def put(self,request,pk):
         mrd = self.get_object(pk)
-        serilaizer = MovieRatingDetailSerializer(mrd,data=request.data,partial=True)
+        request_data = request.data        
+        serilaizer = MovieRatingDetailSerializer(mrd,data=request_data,partial=True)
         if serilaizer.is_valid():
             serilaizer.save()
             return Response(serilaizer.data)

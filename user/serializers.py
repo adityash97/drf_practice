@@ -7,6 +7,9 @@ from .models import Token
 from movielist_app.models import Genre
 from movielist_app.models import Movie
 
+from movielist_app.serializers import GenreSerializer
+from movielist_app.serializers import MovieSerializer
+
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     fname = serializers.CharField(max_length=250)
@@ -15,24 +18,47 @@ class UserSerializer(serializers.Serializer):
     email = serializers.EmailField(required = False)
     dob = serializers.DateField(required = False)
     age = serializers.IntegerField(required = False)
-    prefered_genre = serializers.PrimaryKeyRelatedField(queryset=Genre.objects.all(),many=True,required=False)
+    prefered_genre = GenreSerializer(many=True)
     created_on = serializers.DateTimeField(read_only=True)
     updated_on = serializers.DateTimeField(read_only=True)
     
     def create(self,validated_data):
-        return User.objects.create(**validated_data)
+        genre_data = validated_data.pop('prefered_genre',[])
+        instance = User.objects.create(**validated_data)
+        geners = []
+        if genre_data:
+            for data in genre_data:
+                genre = Genre.objects.get_or_create(genre=data['genre'])
+                geners.append(genre[0])
+            instance.prefered_genre.set(geners)
+            
+        return instance
     
     def update(self,instance, validated_data):
-        genre_ids = validated_data.pop('prefered_genre',[])
-        for k,v in validated_data.items():
-            setattr(instance,k,v)
+        genre_data = validated_data.pop('prefered_genre',[])
+        if validated_data:
+            for k,v in validated_data.items():
+                setattr(instance,k,v)
+        if genre_data:
+            # 1st way
+            # genre = instance.prefered_genre
+            # genre.clear()
+            # for data in genre_data:
+            #     genre = Genre.objects.create(**data)
+            #     instance.prefered_genre.add(genre)
+            # 2nd way
+            geners = []
+            for data in genre_data:
+                genre = Genre.objects.get_or_create(genre = data['genre'])
+                geners.append(genre[0])
+            instance.prefered_genre.set(geners)
         instance.save()
-        instance.prefered_genre.set(genre_ids)
         return instance
 
 
+
 class MovieRatingDetailSerializer(serializers.Serializer):
-    id=serializers.IntegerField(read_only=True)
+    id=serializers.IntegerField(read_only=True,required=False)
     movie = serializers.PrimaryKeyRelatedField(queryset = Movie.objects.all())
     user = serializers.PrimaryKeyRelatedField(queryset = User.objects.all())
     comment = serializers.CharField(required=False)

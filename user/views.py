@@ -66,21 +66,7 @@ class MovieRatingDetailAPIView(APIView):
     def post(self,request):
         # A user can only post one review for a movie.
         
-        # existing_details = MovieRatingDetail.objects.get(user=request.data['user'],movie=request.data['movie'])
-        # for field in request.data:
-        #     if hasattr(existing_details, field):
-        #         return Response({'msg':'A user can only give only review.','status':400},status=400)
-        # import pdb;pdb.set_trace()
-        
-        # instance = Movie.objects.get(pk = request.data['movie']['id'])
-        # import pdb;pdb.set_trace()
-        # s  = MovieSerializer(instance,data = {id: instance.id})
-        # if s.is_valid():
-        #     print("valid")
-        # else:
-        #     print("error",s.errors)
-            
-        # import pdb;pdb.set_trace()
+
         serializer = MovieRatingDetailSerializer(self.mrd,data = request.data)
         if serializer.is_valid():
             serializer.save()

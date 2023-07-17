@@ -69,9 +69,6 @@ class MovieRatingDetailAPIView(APIView):
 
     def post(self, request):
         # A user can only post one review for a movie.
-
-        # import pdb
-        # pdb.set_trace()
         serializer = MovieRatingDetailSerializer(
             data=request.data)
         if serializer.is_valid():
@@ -114,6 +111,7 @@ class TokenAPIView(APIView):
         serializer = TokenSerializer(token, many=True)
         return Response(serializer.data)
 
+    # This should be handled by other function or if  manually then there should be only one token.
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():

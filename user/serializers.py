@@ -15,7 +15,7 @@ from movielist_app.serializers import MovieSerializer
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     fname = serializers.CharField(max_length=250)
-    lname = serializers.CharField(max_length=250)
+    lname = serializers.CharField(max_length=250,required = False)
     mobile = serializers.CharField(max_length=100, required=False)
     email = serializers.EmailField(required=False)
     dob = serializers.DateField(required=False)
@@ -25,7 +25,7 @@ class UserSerializer(serializers.Serializer):
     updated_on = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
-        genre_data = validated_data.pop('prefered_genre', [])
+        genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
         instance = User.objects.create(**validated_data)
         geners = []
         if genre_data:
@@ -37,23 +37,26 @@ class UserSerializer(serializers.Serializer):
         return instance
 
     def update(self, instance, validated_data):
-        genre_data = validated_data.pop('prefered_genre', [])
         if validated_data:
             for k, v in validated_data.items():
                 setattr(instance, k, v)
-        if genre_data:
-            # 1st way
-            # genre = instance.prefered_genre
-            # genre.clear()
-            # for data in genre_data:
-            #     genre = Genre.objects.create(**data)
-            #     instance.prefered_genre.add(genre)
-            # 2nd way
-            geners = []
-            for data in genre_data:
-                genre = Genre.objects.get_or_create(genre=data['genre'])
-                geners.append(genre[0])
-            instance.prefered_genre.set(geners)
+        try:
+            genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
+            if genre_data:
+                # 1st way
+                # genre = instance.prefered_genre
+                # genre.clear()
+                # for data in genre_data:
+                #     genre = Genre.objects.create(**data)
+                #     instance.prefered_genre.add(genre)
+                # 2nd way
+                geners = []
+                for data in genre_data:
+                    genre = Genre.objects.get_or_create(genre=data['genre'])
+                    geners.append(genre[0])
+                instance.prefered_genre.set(geners)
+        except:
+            pass
         instance.save()
         return instance
 

@@ -44,7 +44,7 @@ class MovieSerializer(serializers.Serializer):
     genre = GenreSerializer(read_only=True, many=True)
 
     def create(self, validated_data):
-        genre_ids = self.initial_data['genre']
+        genre_ids = self.initial_data['genre'] #TODO Try catch
         genres = []
         for genre in genre_ids:
             try:
@@ -58,18 +58,21 @@ class MovieSerializer(serializers.Serializer):
         return movie
 
     def update(self, instance, validated_data):
-        genre_ids = self.initial_data['genre']
-        genres = []
-        for genre in genre_ids:
-            try:
-                genres.append(Genre.objects.get(pk=genre["id"]))
-            except:
-                pass
-
-        validated_data['director'] = Director.objects.get(
+        try:
+            validated_data['director'] = Director.objects.get(
             pk=self.initial_data['director']['id'])
+        except:
+            pass
+        
         for k, v in validated_data.items():
             setattr(instance, k, v)
-        instance.genre.set(genres)
+        try:
+            genre_ids = self.initial_data['genre']
+            genres = []
+            for genre in genre_ids:
+                    genres.append(Genre.objects.get(pk=genre["id"]))
+            instance.genre.set(genres)
+        except:
+                pass
         instance.save()
         return instance

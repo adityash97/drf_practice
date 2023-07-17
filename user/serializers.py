@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import User
 from .models import MovieRatingDetail
@@ -68,12 +69,14 @@ class MovieRatingDetailSerializer(serializers.Serializer):
     updated_on = serializers.DateTimeField(required=False)
 
     def create(self, validated_data):
-
-        movie = Movie.objects.get(pk=self.initial_data['movie']['id'])
-        user = User.objects.get(pk=self.initial_data['user']['id'])
-        validated_data['movie'] = movie
-        validated_data['user'] = user
-        return MovieRatingDetail.objects.create(**validated_data)
+        try:
+            movie = Movie.objects.get(pk=self.initial_data['movie']['id'])
+            user = User.objects.get(pk=self.initial_data['user']['id'])
+            validated_data['movie'] = movie
+            validated_data['user'] = user
+            return MovieRatingDetail.objects.create(**validated_data)
+        except:
+            raise ValidationError('Movie and User are required')
 
     def update(self, instance, validated_data):
         for k, v in validated_data.items():
@@ -83,12 +86,17 @@ class MovieRatingDetailSerializer(serializers.Serializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = UserSerializer(read_only=True)
     token = serializers.CharField(max_length=500, read_only=True)
     created_on = serializers.DateTimeField(read_only=True)
     updated_on = serializers.DateTimeField(read_only=True)
 
     def create(self, validated_data):
-        token = 'sample token'  # functionality to create JWT token / simple token
-        validated_data['token'] = token
-        return Token.objects.create(**validated_data)
+        try:
+            user = User.objects.get(pk=self.initial_data['user']['id'])
+            validated_data['user'] = user
+            token = 'sample token'  # functionality to create JWT token / simple token
+            validated_data['token'] = token
+            return Token.objects.create(**validated_data)
+        except:
+            raise ValidationError('User is required')

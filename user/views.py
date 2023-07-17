@@ -1,56 +1,65 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import User,MovieRatingDetail,Token
-from .serializers import UserSerializer
-from .serializers import MovieRatingDetailSerializer
-from .serializers import TokenSerializer
+from django.http import Http404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from django.http import Http404
+from .models import User, MovieRatingDetail, Token
+from .serializers import UserSerializer
+from .serializers import MovieRatingDetailSerializer
+from .serializers import TokenSerializer
+
+from movielist_app.serializers import MovieSerializer
+from movielist_app.models import Movie
+
+
+from .models import User
+
+from utils import remove_none_from_dict
+
 
 class UserAPIView(APIView):
-    def get(self,request):
+    def get(self, request):
         user = User.objects.all()
-        serializer = UserSerializer(user,many=True)
+        serializer = UserSerializer(user, many=True)
         return Response(serializer.data)
-    
-    def post(self,request):
-        serilaizer = UserSerializer(data = request.data)
+
+    def post(self, request):
+        serilaizer = UserSerializer(data=request.data)
         if serilaizer.is_valid():
             serilaizer.save()
             return Response(serilaizer.data)
         return Response(serilaizer.errors)
-    
-    
+
+
 class UserDetailAPIView(APIView):
-    def get_object(self,pk):
+    def get_object(self, pk):
         try:
             return User.objects.get(pk=pk)
         except User.DoesNotExist:
             raise Http404
-    
-    def get(self,request,pk):
+
+    def get(self, request, pk):
         user = self.get_object(pk)
         serializer = UserSerializer(user)
         return Response(serializer.data)
-    
-    def put(self,request,pk):
+
+    def put(self, request, pk):
         user = self.get_object(pk)
-        serializer = UserSerializer(user,data = request.data,partial=True)
+        serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
-    
-    def delete(self,request,pk):
+
+    def delete(self, request, pk):
         user = self.get_object(pk)
         user.delete()
         return Response({'msg': "User Deleted"})
 
-    
+
 class MovieRatingDetailAPIView(APIView):
     mrd = MovieRatingDetail.objects.all()
     def get(self,request):
@@ -70,37 +79,42 @@ class MovieRatingDetailAPIView(APIView):
         
     
 class MovieRatingDetailsAPIView(APIView):
-    def get_object(self,pk):
+    def get_object(self, pk):
         try:
             return MovieRatingDetail.objects.get(pk=pk)
         except MovieRatingDetail.DoesNotExist:
             raise Http404
-    def get(self,request,pk):
+
+    def get(self, request, pk):
         mrd = self.get_object(pk)
         serializer = MovieRatingDetailSerializer(mrd)
         return Response(serializer.data)
-    
-    def put(self,request,pk):
+
+    def put(self, request, pk):
         mrd = self.get_object(pk)
-        serilaizer = MovieRatingDetailSerializer(mrd,data=request.data,partial=True)
+        request_data = request.data
+        serilaizer = MovieRatingDetailSerializer(
+            mrd, data=request_data, partial=True)
         if serilaizer.is_valid():
             serilaizer.save()
             return Response(serilaizer.data)
         return Response(serilaizer.errors)
-    
-    def delete(self,request,pk):
+
+    def delete(self, request, pk):
         mrd = self.get_object(pk)
         mrd.delete()
-        return Response({"msg":"Movie Rating Details Sucessfully Deleted"})
+        return Response({"msg": "Movie Rating Details Sucessfully Deleted"})
+
 
 class TokenAPIView(APIView):
-    def get(self,request):
+    def get(self, request):
         token = Token.objects.all()
-        serializer = TokenSerializer(token,many=True)
+        serializer = TokenSerializer(token, many=True)
         return Response(serializer.data)
-    
-    def post(self,request):
-        serializer = TokenSerializer(data = request.data)
+
+    # This should be handled by other function or if  manually then there should be only one token.
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

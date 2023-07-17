@@ -59,8 +59,8 @@ class UserSerializer(serializers.Serializer):
 
 class MovieRatingDetailSerializer(serializers.Serializer):
     id=serializers.IntegerField(read_only=True,required=False)
-    movie = serializers.PrimaryKeyRelatedField(queryset = Movie.objects.all())
-    user = serializers.PrimaryKeyRelatedField(queryset = User.objects.all())
+    movie = MovieSerializer(required=False)
+    user = UserSerializer(required=False)
     comment = serializers.CharField(required=False)
     rating = serializers.IntegerField()
     like = serializers.BooleanField(required=False) 

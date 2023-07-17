@@ -54,7 +54,24 @@ class Movie(models.Model):
     def __str__(self):
         return self.title
     
+    def get_cleaned_data(self):
+        fields = {}
+        for field in self._meta.fields:
+            field_name = field.name
+            field_value = getattr(self,field_name)
+            if field_name == 'director': #returning director id
+                fields[field_name] = field_value.id
+            elif field_name == 'genre': #returning genre id's
+                genre_ids = []
+                for data in self.genre.values(): 
+                    genre_ids.append(data['id'])
+            elif field_value:
+                fields[field_name] = field_value
+        return fields
+    def get_id(self):
+        self.id
 
+            
     
 
 

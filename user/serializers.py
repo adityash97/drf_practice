@@ -12,6 +12,14 @@ from movielist_app.serializers import GenreSerializer
 from movielist_app.serializers import MovieSerializer
 from rest_framework.serializers import ModelSerializer
 
+class ProfileSerilaizer(ModelSerializer):
+    class Meta:
+        model= User
+        exclude=['password','is_superuser','is_staff','user_permissions','groups']
+
+
+
+
 # class UserSerializer(serializers.Serializer):
 #     id = serializers.IntegerField(read_only=True)
 #     fname = serializers.CharField(max_length=250)

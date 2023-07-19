@@ -1,26 +1,36 @@
-from django.shortcuts import render
-
 # Create your views here.
+from .permissions.custompermission import isAuthor
 from django.http import Http404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
+from rest_framework.validators import ValidationError
 
 from .models import User, MovieRatingDetail, Token
 from .serializers import UserSerializer
 from .serializers import MovieRatingDetailSerializer
 from .serializers import TokenSerializer
-
-from movielist_app.serializers import MovieSerializer
-from movielist_app.models import Movie
-
+from .serializers import ProfileSerilaizer
 
 from .models import User
 
-from utils import remove_none_from_dict
+
+class ProfileAPIView(APIView):
+    def get(self, request):
+        try:
+            user = request.user.username
+            data = User.objects.get(username=user)
+            serilaizer = ProfileSerilaizer(data)
+            return Response(serilaizer.data)
+        except:
+            raise ValidationError({"msg": "User not found"})
 
 
+# depricated
 class UserAPIView(APIView):
+    permission_classes = [IsAdminUser]
+
     def get(self, request):
         user = User.objects.all()
         serializer = UserSerializer(user, many=True)
@@ -34,6 +44,7 @@ class UserAPIView(APIView):
         return Response(serilaizer.errors)
 
 
+# depricated
 class UserDetailAPIView(APIView):
     def get_object(self, pk):
         try:
@@ -62,23 +73,29 @@ class UserDetailAPIView(APIView):
 
 class MovieRatingDetailAPIView(APIView):
     mrd = MovieRatingDetail.objects.all()
-    def get(self,request):
-        serializer = MovieRatingDetailSerializer(self.mrd,many=True)
+
+    def get(self, request):
+        serializer = MovieRatingDetailSerializer(self.mrd, many=True)
         return Response(serializer.data)
-    def post(self,request):
+
+    def post(self, request):
         # A user can only post one review for a movie.
-        try :
-            MovieRatingDetail.objects.get(user=request.data['user'],movie=request.data['movie'])
-            return Response({'msg':'A user can only give only review.','status':400},status=400)
-        except :
-            serializer = MovieRatingDetailSerializer(self.mrd,data = request.data)
+        try:
+            MovieRatingDetail.objects.get(
+                user=request.data['user'], movie=request.data['movie'])
+            return Response({'msg': 'A user can only give only review.', 'status': 400}, status=400)
+        except:
+            serializer = MovieRatingDetailSerializer(
+                self.mrd, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors)
-        
-    
+
+
 class MovieRatingDetailsAPIView(APIView):
+    permission_classes = [isAuthor]
+
     def get_object(self, pk):
         try:
             return MovieRatingDetail.objects.get(pk=pk)

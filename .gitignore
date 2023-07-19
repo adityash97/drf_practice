@@ -1,6 +1,7 @@
 *.pyc
 *.swp
 .env
+.DS_Store
 db.sqlite3
 drf_practice/bin
 drf_practice/lib

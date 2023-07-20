@@ -1,4 +1,7 @@
 # Create your views here.
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.http import JsonResponse
+from rest_framework.authtoken.models import Token
 from .permissions.custompermission import isAuthor
 from django.http import Http404
 
@@ -7,13 +10,31 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from rest_framework.validators import ValidationError
 
-from .models import User, MovieRatingDetail, Token
+from .models import User, MovieRatingDetail
 from .serializers import UserSerializer
 from .serializers import MovieRatingDetailSerializer
-from .serializers import TokenSerializer
+from .serializers import UserResisterSerializer
 from .serializers import ProfileSerilaizer
 
 from .models import User
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.status import HTTP_200_OK
+# To logout
+
+
+class LogoutAPIViews(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # token = Token.objects.get(user=request.user)
+        # token.delete()
+        # return Response({"msg": "log out !"})
+        request.user.auth_token.delete()
+        return Response({"msg": "logged out!"}, status=HTTP_200_OK)
+
+
+# To view profile
 
 
 class ProfileAPIView(APIView):
@@ -26,8 +47,9 @@ class ProfileAPIView(APIView):
         except:
             raise ValidationError({"msg": "User not found"})
 
+# To view all users, only Admin can view it
 
-# depricated
+
 class UserAPIView(APIView):
     permission_classes = [IsAdminUser]
 
@@ -36,42 +58,25 @@ class UserAPIView(APIView):
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data)
 
+# To Register A new user
+
+
+class UserRegisterAPIView(APIView):
     def post(self, request):
-        serilaizer = UserSerializer(data=request.data)
-        if serilaizer.is_valid():
-            serilaizer.save()
-            return Response(serilaizer.data)
-        return Response(serilaizer.errors)
-
-
-# depricated
-class UserDetailAPIView(APIView):
-    def get_object(self, pk):
-        try:
-            return User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            raise Http404
-
-    def get(self, request, pk):
-        user = self.get_object(pk)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
-    def put(self, request, pk):
-        user = self.get_object(pk)
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        serializer = UserResisterSerializer(data=request.data)
         if serializer.is_valid():
+            data = {}
             serializer.save()
-            return Response(serializer.data)
+            data['msg'] = "Register Succesfully"
+            data['userdetails'] = serializer.data
+            data['token'] = Token.objects.get_or_create(
+                user=User.objects.get(username=serializer.data['username']))[0].key
+            return JsonResponse(data)
         return Response(serializer.errors)
-
-    def delete(self, request, pk):
-        user = self.get_object(pk)
-        user.delete()
-        return Response({'msg': "User Deleted"})
 
 
 class MovieRatingDetailAPIView(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
     mrd = MovieRatingDetail.objects.all()
 
     def get(self, request):
@@ -121,18 +126,3 @@ class MovieRatingDetailsAPIView(APIView):
         mrd = self.get_object(pk)
         mrd.delete()
         return Response({"msg": "Movie Rating Details Sucessfully Deleted"})
-
-
-class TokenAPIView(APIView):
-    def get(self, request):
-        token = Token.objects.all()
-        serializer = TokenSerializer(token, many=True)
-        return Response(serializer.data)
-
-    # This should be handled by other function or if  manually then there should be only one token.
-    def post(self, request):
-        serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)

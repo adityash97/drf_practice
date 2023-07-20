@@ -3,74 +3,55 @@ from rest_framework.exceptions import ValidationError
 
 from .models import User
 from .models import MovieRatingDetail
-from .models import Token
 
 from movielist_app.models import Genre
 from movielist_app.models import Movie
 
-from movielist_app.serializers import GenreSerializer
+
 from movielist_app.serializers import MovieSerializer
 from rest_framework.serializers import ModelSerializer
 
+
 class ProfileSerilaizer(ModelSerializer):
     class Meta:
-        model= User
-        exclude=['password','is_superuser','is_staff','user_permissions','groups']
+        model = User
+        exclude = ['password', 'is_superuser',
+                   'is_staff', 'user_permissions', 'groups']
 
 
+# To Register
+class UserResisterSerializer(serializers.ModelSerializer):
+    password2 = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
+
+    class Meta:
+        model = User
+        exclude = ['is_superuser',
+                   'is_staff', 'user_permissions', 'groups', 'last_login']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate(self, object):
+        if object["password"] != object["password2"]:
+            raise ValidationError({"msg": "Please re-enter corerct password."})
+        if User.objects.filter(email=object["email"]).exists():
+            raise ValidationError({"msg": "Email already used!"})
+        return object
+
+    def save(self):
+        user = User(
+            username=self.validated_data['username'], email=self.validated_data['email'])
+        user.set_password(self.validated_data['password'])
+        user.save()
+        return user
 
 
-# class UserSerializer(serializers.Serializer):
-#     id = serializers.IntegerField(read_only=True)
-#     fname = serializers.CharField(max_length=250)
-#     lname = serializers.CharField(max_length=250,required = False)
-#     mobile = serializers.CharField(max_length=100, required=False)
-#     email = serializers.EmailField(required=False)
-#     dob = serializers.DateField(required=False)
-#     age = serializers.IntegerField(required=False)
-#     prefered_genre = GenreSerializer(many=True)
-#     created_on = serializers.DateTimeField(read_only=True)
-#     updated_on = serializers.DateTimeField(read_only=True)
-
-#     def create(self, validated_data):
-#         genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
-#         instance = User.objects.create(**validated_data)
-#         geners = []
-#         if genre_data:
-#             for data in genre_data:
-#                 genre = Genre.objects.get_or_create(genre=data['genre'])
-#                 geners.append(genre[0])
-#             instance.prefered_genre.set(geners)
-
-#         return instance
-
-#     def update(self, instance, validated_data):
-#         if validated_data:
-#             for k, v in validated_data.items():
-#                 setattr(instance, k, v)
-#         try:
-#             genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
-#             if genre_data:
-#                 # 1st way
-#                 # genre = instance.prefered_genre
-#                 # genre.clear()
-#                 # for data in genre_data:
-#                 #     genre = Genre.objects.create(**data)
-#                 #     instance.prefered_genre.add(genre)
-#                 # 2nd way
-#                 geners = []
-#                 for data in genre_data:
-#                     genre = Genre.objects.get_or_create(genre=data['genre'])
-#                     geners.append(genre[0])
-#                 instance.prefered_genre.set(geners)
-#         except:
-#             pass
-#         instance.save()
-#         return instance
 class UserSerializer(ModelSerializer):
     class Meta:
-        model= User
-        fields = ['id','username']
+        model = User
+        fields = ['id', 'username', 'email']
+
 
 class MovieRatingDetailSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True, required=False)
@@ -97,20 +78,3 @@ class MovieRatingDetailSerializer(serializers.Serializer):
             setattr(instance, k, v)
         instance.save()
         return instance
-
-
-class TokenSerializer(serializers.Serializer):
-    user = UserSerializer(read_only=True)
-    token = serializers.CharField(max_length=500, read_only=True)
-    created_on = serializers.DateTimeField(read_only=True)
-    updated_on = serializers.DateTimeField(read_only=True)
-
-    def create(self, validated_data):
-        try:
-            user = User.objects.get(pk=self.initial_data['user']['id'])
-            validated_data['user'] = user
-            token = 'sample token'  # functionality to create JWT token / simple token
-            validated_data['token'] = token
-            return Token.objects.create(**validated_data)
-        except:
-            raise ValidationError('User is required')

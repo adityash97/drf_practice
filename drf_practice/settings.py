@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'movielist_app',
     'user',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'testnestedserializer'
 ]
 
 MIDDLEWARE = [

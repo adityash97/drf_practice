@@ -62,22 +62,25 @@ class UserDetailAPIView(APIView):
 
 class MovieRatingDetailAPIView(APIView):
     mrd = MovieRatingDetail.objects.all()
-    def get(self,request):
-        serializer = MovieRatingDetailSerializer(self.mrd,many=True)
+
+    def get(self, request):
+        serializer = MovieRatingDetailSerializer(self.mrd, many=True)
         return Response(serializer.data)
-    def post(self,request):
+
+    def post(self, request):
         # A user can only post one review for a movie.
-        try :
-            MovieRatingDetail.objects.get(user=request.data['user'],movie=request.data['movie'])
-            return Response({'msg':'A user can only give only review.','status':400},status=400)
-        except :
-            serializer = MovieRatingDetailSerializer(self.mrd,data = request.data)
+        try:
+            MovieRatingDetail.objects.get(
+                user=request.data['user'], movie=request.data['movie'])
+            return Response({'msg': 'A user can only give only review.', 'status': 400}, status=400)
+        except:
+            serializer = MovieRatingDetailSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors)
-        
-    
+
+
 class MovieRatingDetailsAPIView(APIView):
     def get_object(self, pk):
         try:

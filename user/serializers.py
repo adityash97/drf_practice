@@ -12,57 +12,25 @@ from movielist_app.serializers import GenreSerializer
 from movielist_app.serializers import MovieSerializer
 from rest_framework.serializers import ModelSerializer
 
-# class UserSerializer(serializers.Serializer):
-#     id = serializers.IntegerField(read_only=True)
-#     fname = serializers.CharField(max_length=250)
-#     lname = serializers.CharField(max_length=250,required = False)
-#     mobile = serializers.CharField(max_length=100, required=False)
-#     email = serializers.EmailField(required=False)
-#     dob = serializers.DateField(required=False)
-#     age = serializers.IntegerField(required=False)
-#     prefered_genre = GenreSerializer(many=True)
-#     created_on = serializers.DateTimeField(read_only=True)
-#     updated_on = serializers.DateTimeField(read_only=True)
 
-#     def create(self, validated_data):
-#         genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
-#         instance = User.objects.create(**validated_data)
-#         geners = []
-#         if genre_data:
-#             for data in genre_data:
-#                 genre = Genre.objects.get_or_create(genre=data['genre'])
-#                 geners.append(genre[0])
-#             instance.prefered_genre.set(geners)
-
-#         return instance
-
-#     def update(self, instance, validated_data):
-#         if validated_data:
-#             for k, v in validated_data.items():
-#                 setattr(instance, k, v)
-#         try:
-#             genre_data = validated_data.pop('prefered_genre', []) #TODO Try catch
-#             if genre_data:
-#                 # 1st way
-#                 # genre = instance.prefered_genre
-#                 # genre.clear()
-#                 # for data in genre_data:
-#                 #     genre = Genre.objects.create(**data)
-#                 #     instance.prefered_genre.add(genre)
-#                 # 2nd way
-#                 geners = []
-#                 for data in genre_data:
-#                     genre = Genre.objects.get_or_create(genre=data['genre'])
-#                     geners.append(genre[0])
-#                 instance.prefered_genre.set(geners)
-#         except:
-#             pass
-#         instance.save()
-#         return instance
 class UserSerializer(ModelSerializer):
+
     class Meta:
-        model= User
-        fields = ['id','username']
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+
+def validated_mobile_number(self):
+    if self.mobile_number < 10:
+        raise ValidationError({"msg": "not valid mobile num"})
+    return self
+
+
+def likeValidator(data):
+    if not data:  # if it is False
+        raise ValidationError({"msg": "You must like it"})
+    return data
+
 
 class MovieRatingDetailSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True, required=False)
@@ -70,11 +38,12 @@ class MovieRatingDetailSerializer(serializers.Serializer):
     user = UserSerializer(read_only=True)
     comment = serializers.CharField(required=False)
     rating = serializers.IntegerField()
-    like = serializers.BooleanField(required=False)
+    like = serializers.BooleanField(required=False, validators=[likeValidator])
     created_on = serializers.DateTimeField(required=False)
     updated_on = serializers.DateTimeField(required=False)
 
     def create(self, validated_data):
+
         try:
             movie = Movie.objects.get(pk=self.initial_data['movie']['id'])
             user = User.objects.get(pk=self.initial_data['user']['id'])
@@ -89,6 +58,16 @@ class MovieRatingDetailSerializer(serializers.Serializer):
             setattr(instance, k, v)
         instance.save()
         return instance
+
+    def validate_rating(self, data):  # only one field
+        if data < 4:
+            raise ValidationError({"msg": "rating should be above 4"})
+        return data
+
+    def validate(self, object):   # more than one field
+        if object['rating'] == 5 and object['like'] == False:
+            raise ValidationError({"msg": "You must like the movie too"})
+        return object
 
 
 class TokenSerializer(serializers.Serializer):

@@ -21,7 +21,6 @@ from django.conf.urls import include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('movielist_app.urls')),
-    path('account/',include('user.urls')),
-    # path('api-auth',include('rest_framework.urls')) # Token Authentication is enabled now, use this for temp login functionality
+    path('account/',include('user.urls')), # add this
+
 ]

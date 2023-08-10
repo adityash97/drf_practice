@@ -53,7 +53,7 @@ class ProfileAPIView(APIView):
 class UserAPIView(APIView):
     permission_classes = [IsAdminUser]
 
-    def get(self, request):
+    def get(self, request): 
         user = User.objects.all()
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data)
@@ -74,9 +74,9 @@ class UserRegisterAPIView(APIView):
             return JsonResponse(data)
         return Response(serializer.errors)
 
-
+from .permissions.custompermission import IsAuth_Or_ReadOnly
 class MovieRatingDetailAPIView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuth_Or_ReadOnly]
     mrd = MovieRatingDetail.objects.all()
 
     def get(self, request):
